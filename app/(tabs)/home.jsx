@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,32 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker'; // For image uploading
+import * as ImagePicker from 'expo-image-picker';
 
 export default function HomeScreen({ navigation }) {
+  const [posts, setPosts] = useState([]);
   const [postText, setPostText] = useState('');
   const [imageUri, setImageUri] = useState(null);
-  const [posts, setPosts] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingPostId, setEditingPostId] = useState(null);
+
   const POSTS_DISPLAY_LIMIT = 5;
+
+  // Fetch posts from the API on component mount
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+        const data = await response.json();
+        setPosts(data.slice(0, POSTS_DISPLAY_LIMIT)); // Limit posts for display
+      } catch (error) {
+        Alert.alert('Error', 'Failed to fetch posts');
+      }
+    };
+    fetchPosts();
+  }, []);
 
   // Function to pick an image
   const pickImage = async () => {
@@ -31,21 +49,51 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  // Function to add a new post
-  const addPost = () => {
-    if (postText.trim() || imageUri) {
-      setPosts([
-        {
+  // Function to handle adding or editing a post
+  const handlePost = async () => {
+    if (postText.trim()) {
+      if (isEditing) {
+        // Update the post
+        const updatedPosts = posts.map((post) =>
+          post.id === editingPostId
+            ? { ...post, text: postText, image: imageUri }
+            : post
+        );
+        setPosts(updatedPosts);
+        setIsEditing(false);
+        setEditingPostId(null);
+      } else {
+        // Create a new post
+        const newPost = {
           id: Date.now().toString(),
           text: postText,
           image: imageUri,
           details: `Details about: ${postText}`,
-        },
-        ...posts,
-      ]);
+        };
+        setPosts([newPost, ...posts]);
+
+        // Optional: Send the post to the server
+        try {
+          await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newPost),
+          });
+        } catch (error) {
+          Alert.alert('Error', 'Failed to create post on the server');
+        }
+      }
       setPostText('');
       setImageUri(null);
     }
+  };
+
+  // Function to start editing a post
+  const startEditing = (post) => {
+    setPostText(post.text);
+    setImageUri(post.image);
+    setIsEditing(true);
+    setEditingPostId(post.id);
   };
 
   return (
@@ -59,28 +107,25 @@ export default function HomeScreen({ navigation }) {
           onChangeText={setPostText}
           multiline
         />
-        {imageUri && (
-          <Image source={{ uri: imageUri }} style={styles.previewImage} />
-        )}
+        {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
         <View style={styles.buttonContainer}>
           <Button title="Pick an Image" onPress={pickImage} />
-          <Button title="Post" onPress={addPost} />
+          <Button title={isEditing ? 'Update Post' : 'Post'} onPress={handlePost} />
         </View>
       </View>
 
       {/* Blog Posts List */}
       <FlatList
-        data={posts.slice(0, POSTS_DISPLAY_LIMIT)} // Limit displayed posts
-        keyExtractor={(item) => item.id}
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.postContainer}
             onPress={() => navigation.navigate('PostDetails', { post: item })}
+            onLongPress={() => startEditing(item)} // Long press to edit a post
           >
-            {item.image && (
-              <Image source={{ uri: item.image }} style={styles.postImage} />
-            )}
-            <Text style={styles.postText}>{item.text}</Text>
+            {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
+            <Text style={styles.postText}>{item.text || item.title}</Text>
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.flatListContainer}
