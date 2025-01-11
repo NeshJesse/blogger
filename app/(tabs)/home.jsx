@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { FontAwesome } from '@expo/vector-icons'; // Importing vector icons
 
 export default function HomeScreen({ navigation }) {
   const [posts, setPosts] = useState([]);
@@ -70,20 +71,8 @@ export default function HomeScreen({ navigation }) {
           title: postTitle,
           body: postText,
           image: imageUri,
-          details: `Details about: ${postTitle}`,
         };
         setPosts([newPost, ...posts]);
-
-        // Optional: Send the post to the server
-        try {
-          await fetch('https://jsonplaceholder.typicode.com/posts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newPost),
-          });
-        } catch (error) {
-          Alert.alert('Error', 'Failed to create post on the server');
-        }
       }
       setPostText('');
       setPostTitle('');
@@ -126,21 +115,29 @@ export default function HomeScreen({ navigation }) {
 
       {/* Blog Posts List */}
       <FlatList
-  data={posts}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <TouchableOpacity
-      style={styles.postContainer}
-      onPress={() => navigation.navigate('PostDetails', { post: item })}
-    >
-      {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
-      <Text style={styles.postTitle}>{item.title}</Text>
-      <Text style={styles.postText}>{item.body}</Text>
-    </TouchableOpacity>
-  )}
-  contentContainerStyle={styles.flatListContainer}
-/>
-
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.postContainer}>
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              onPress={() => navigation.navigate('PostDetails', { post: item })}
+            >
+              {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
+              <Text style={styles.postTitle}>{item.title}</Text>
+              <Text style={styles.postText}>{item.body}</Text>
+            </TouchableOpacity>
+            {/* Edit button */}
+            <TouchableOpacity
+              onPress={() => startEditing(item)}
+              style={styles.editButton}
+            >
+              <FontAwesome name="edit" size={24} color="#007BFF" />
+            </TouchableOpacity>
+          </View>
+        )}
+        contentContainerStyle={styles.flatListContainer}
+      />
     </View>
   );
 }
@@ -182,26 +179,31 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   postImage: {
-    width: '100%',
-    height: 150,
-    marginBottom: 8,
+    width: 60,
+    height: 60,
+    marginRight: 12,
     borderRadius: 8,
   },
   postTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 8,
   },
   postText: {
     fontSize: 14,
     color: '#333',
+    marginTop: 4,
+  },
+  editButton: {
+    marginLeft: 16,
   },
 });
 
