@@ -15,6 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 export default function HomeScreen({ navigation }) {
   const [posts, setPosts] = useState([]);
   const [postText, setPostText] = useState('');
+  const [postTitle, setPostTitle] = useState('');
   const [imageUri, setImageUri] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingPostId, setEditingPostId] = useState(null);
@@ -51,12 +52,12 @@ export default function HomeScreen({ navigation }) {
 
   // Function to handle adding or editing a post
   const handlePost = async () => {
-    if (postText.trim()) {
+    if (postTitle.trim() && postText.trim()) {
       if (isEditing) {
         // Update the post
         const updatedPosts = posts.map((post) =>
           post.id === editingPostId
-            ? { ...post, text: postText, image: imageUri }
+            ? { ...post, title: postTitle, body: postText, image: imageUri }
             : post
         );
         setPosts(updatedPosts);
@@ -66,9 +67,10 @@ export default function HomeScreen({ navigation }) {
         // Create a new post
         const newPost = {
           id: Date.now().toString(),
-          text: postText,
+          title: postTitle,
+          body: postText,
           image: imageUri,
-          details: `Details about: ${postText}`,
+          details: `Details about: ${postTitle}`,
         };
         setPosts([newPost, ...posts]);
 
@@ -84,13 +86,15 @@ export default function HomeScreen({ navigation }) {
         }
       }
       setPostText('');
+      setPostTitle('');
       setImageUri(null);
     }
   };
 
   // Function to start editing a post
   const startEditing = (post) => {
-    setPostText(post.text);
+    setPostTitle(post.title);
+    setPostText(post.body);
     setImageUri(post.image);
     setIsEditing(true);
     setEditingPostId(post.id);
@@ -100,6 +104,12 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.container}>
       {/* Blog Post Creation Section */}
       <View style={styles.postInputContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Enter post title"
+          value={postTitle}
+          onChangeText={setPostTitle}
+        />
         <TextInput
           style={styles.textInput}
           placeholder="What's on your mind?"
@@ -125,7 +135,8 @@ export default function HomeScreen({ navigation }) {
             onLongPress={() => startEditing(item)} // Long press to edit a post
           >
             {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
-            <Text style={styles.postText}>{item.text || item.title}</Text>
+            <Text style={styles.postTitle}>{item.title}</Text>
+            <Text style={styles.postText}>{item.body}</Text>
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.flatListContainer}
@@ -182,8 +193,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 8,
   },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
   postText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
   },
 });
+
