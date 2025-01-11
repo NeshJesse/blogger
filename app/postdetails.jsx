@@ -6,8 +6,10 @@ export default function PostDetails({ route }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{post.text}</Text>
-      <Text style={styles.details}>{post.details}</Text>
+      {/* Display the title */}
+      <Text style={styles.title}>{post.title}</Text>
+      {/* Display the body/details */}
+      <Text style={styles.body}>{post.body}</Text>
     </View>
   );
 }
@@ -23,7 +25,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  details: {
+  body: {
     fontSize: 16,
     color: '#333',
   },

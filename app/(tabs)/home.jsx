@@ -126,21 +126,21 @@ export default function HomeScreen({ navigation }) {
 
       {/* Blog Posts List */}
       <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.postContainer}
-            onPress={() => navigation.navigate('PostDetails', { post: item })}
-            onLongPress={() => startEditing(item)} // Long press to edit a post
-          >
-            {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
-            <Text style={styles.postTitle}>{item.title}</Text>
-            <Text style={styles.postText}>{item.body}</Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.flatListContainer}
-      />
+  data={posts}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      style={styles.postContainer}
+      onPress={() => navigation.navigate('PostDetails', { post: item })}
+    >
+      {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
+      <Text style={styles.postTitle}>{item.title}</Text>
+      <Text style={styles.postText}>{item.body}</Text>
+    </TouchableOpacity>
+  )}
+  contentContainerStyle={styles.flatListContainer}
+/>
+
     </View>
   );
 }
